@@ -14,7 +14,8 @@ namespace Lab1.ViewModels
     internal class MainWindowViewModel: INotifyPropertyChanged
     {
         #region Fields
-        private User _user = new();
+        private Person _user = new();
+        private bool _isFormFilled = false;
         #endregion
 
         #region Commands
@@ -41,6 +42,69 @@ namespace Lab1.ViewModels
             }
         }
 
+        public string Name
+        {
+            get { return _user.Name; }
+            set
+            {
+                _user.Name = value;
+                ValidateForm();
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string NameToDisplay
+        {
+            get { return _user.Name; }
+            set
+            {
+                _user.Name = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string Surname
+        {
+            get { return _user.Surname; }
+            set
+            {
+                _user.Surname = value;
+                ValidateForm();
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string SurnameToDisplay
+        {
+            get { return _user.Surname; }
+            set
+            {
+                _user.Surname = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string Email
+        {
+            get { return _user.Email; }
+            set
+            {
+                _user.Email = value;
+                ValidateForm();
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string EmailToDisplay
+        {
+            get { return _user.Email; }
+            set
+            {
+                _user.Email = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public string WesternZodiacSign
         {
             get { return _user.WesternZodiacSign; }
@@ -57,9 +121,21 @@ namespace Lab1.ViewModels
             set 
             {
                 _user.Age = value;
+                ValidateForm();
                 NotifyPropertyChanged();
             }
         }
+
+        public bool IsFormFilled
+        {
+            get { return _isFormFilled; }
+            set
+            {
+               _isFormFilled = value;
+                NotifyPropertyChanged();
+            }
+        }
+        
 
         public RelayCommand<object> SubmitCommand
         {
@@ -87,7 +163,17 @@ namespace Lab1.ViewModels
             }
         }
 
-        private void Submit()
+        private void ValidateForm()
+        {
+            IsFormFilled =
+                !(
+                String.IsNullOrWhiteSpace(_user.Name)
+                || String.IsNullOrWhiteSpace(_user.Email)
+                || String.IsNullOrWhiteSpace(_user.Surname)
+                );
+        }
+
+        private async void Submit()
         {
             var today = DateTime.Today;
             int userAge = today.Year - _user.Birthday.Year;
@@ -102,12 +188,15 @@ namespace Lab1.ViewModels
                 MessageBox.Show("Happy birthday!");
             }
             Age = userAge;
-            WesternZodiacSign = DetermineWesternZodiacSign(_user.Birthday);
-            EasternZodiacSign = DetermineEasternZodiacSign(_user.Birthday);
+            WesternZodiacSign = await DetermineWesternZodiacSign(_user.Birthday);
+            EasternZodiacSign = await DetermineEasternZodiacSign(_user.Birthday);
+            NameToDisplay = _user.Name;
+            SurnameToDisplay = _user.Surname;
+            EmailToDisplay = _user.Email;
 
         }
 
-        private string DetermineWesternZodiacSign(DateTime birthday)
+        private Task <string> DetermineWesternZodiacSign(DateTime birthday)
         {
             int month = birthday.Month;
             int day = birthday.Day;
@@ -116,102 +205,102 @@ namespace Lab1.ViewModels
             {
 
                 if (day < 22)
-                    return "Sagittarius";
+                    return Task.FromResult("Sagittarius");
                 else
-                    return "Capricorn";
+                    return Task.FromResult("Capricorn");
             }
 
             else if (month == 1)
             {
                 if (day < 20)
-                    return "Capricorn";
+                    return Task.FromResult("Capricorn");
                 else
-                    return "Aquarius";
+                    return Task.FromResult("Aquarius");
             }
 
             else if (month == 2)
             {
                 if (day < 19)
-                    return "Aquarius";
+                    return Task.FromResult("Aquarius");
                 else
-                    return "Pisces";
+                    return Task.FromResult("Pisces");
             }
 
             else if (month == 3)
             {
                 if (day < 21)
-                    return "Pisces";
+                    return Task.FromResult("Pisces");
                 else
-                    return "Aries";
+                    return Task.FromResult("Aries");
             }
             else if (month == 4)
             {
                 if (day < 20)
-                    return "Aries";
+                    return Task.FromResult("Aries");
                 else
-                    return "Taurus";
+                    return Task.FromResult("Taurus");
             }
 
             else if (month == 5)
             {
                 if (day < 21)
-                    return "Taurus";
+                    return Task.FromResult("Taurus");
                 else
-                    return "Gemini";
+                    return Task.FromResult("Gemini");
             }
 
             else if (month == 6)
             {
                 if (day < 21)
-                    return "Gemini";
+                    return Task.FromResult("Gemini");
                 else
-                    return "Cancer";
+                    return Task.FromResult("Cancer");
             }
 
             else if (month == 7)
             {
                 if (day < 23)
-                    return "Cancer";
+                    return Task.FromResult("Cancer");
                 else
-                    return "Leo";
+                    return Task.FromResult("Leo");
             }
 
             else if (month == 8)
             {
                 if (day < 23)
-                    return "Leo";
+                    return Task.FromResult("Leo");
                 else
-                    return "Virgo";
+                    return Task.FromResult("Virgo");
             }
 
             else if (month == 9)
             {
                 if (day < 23)
-                    return "Virgo";
+                    return Task.FromResult("Virgo");
                 else
-                    return "Libra";
+                    return Task.FromResult("Libra");
             }
 
             else if (month == 10)
             {
                 if (day < 23)
-                    return "Libra";
+                    return Task.FromResult("Libra");
                 else
-                    return "Scorpio";
+                    return Task.FromResult("Scorpio");
             }
 
             else if (month == 11)
             {
                 if (day < 22)
-                    return "Scorpio";
+                    return Task.FromResult("Scorpio");
                 else
-                    return "Sagittarius";
+                    return Task.FromResult("Sagittarius");
             }
 
-            return "";
+            return Task.FromResult("");
         }
 
-        private string DetermineEasternZodiacSign(DateTime birthday)
+        private Task <string> DetermineEasternZodiacSign(DateTime birthday)
         {
             int year = birthday.Year;
              string[] animals = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };
@@ -221,9 +310,9 @@ namespace Lab1.ViewModels
              int ei = (int)Math.Floor((year - 4.0) % 10 / 2);
              int ai = (year - 4) % 12;
              return
-                 $"{elements[ei]} {animals[ai]}. " +
+                 Task.FromResult($"{elements[ei]} {animals[ai]}. " +
                  $"{elementChars[year % 2, ei]}" +
-                 $"{animalChars[(year - 4) % 12]}";
+                 $"{animalChars[(year - 4) % 12]}");
         }
         #endregion
 
