@@ -4,10 +4,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using Lab1.Models;
 using Lab1.Utils;
+using Lab2.Exceptions;
 
 namespace Lab1.ViewModels
 {
@@ -141,7 +143,8 @@ namespace Lab1.ViewModels
         {
             get
             {
-                return _submitCommand ??= new RelayCommand<object>(_ => Submit(), CanExecute);
+                return _submitCommand ??= new RelayCommand<object>(_ => Submit(), CanExecute);           
+                            
             }
             
         }
@@ -173,146 +176,51 @@ namespace Lab1.ViewModels
                 );
         }
 
+        private static void ValidateEmail(string email)
+        {
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(email);
+            if (match.Success)
+                return;
+            else
+                throw new InvalidEmail(email + " is Invalid Email Address");
+        }
+
         private async void Submit()
         {
-            var today = DateTime.Today;
-            int userAge = today.Year - _user.Birthday.Year;
-            if (_user.Birthday.Date > today.AddYears(-userAge)) userAge--;
-            if (_user.Birthday > today || userAge > 135)
+            try
             {
-                MessageBox.Show("Invalid date");
+                if (_user.Birthday > _user.today)
+                {
+                    throw new InvalidFutureDate("Invalid future date");
+                }
+                if (_user.Age > 135)
+                {
+                    throw new InvalidPastDate("Invalid past date");
+                }
+                ValidateEmail(_user.Email);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
                 return;
             }
-            if (_user.Birthday == today)
+            
+            if (_user.IsBirthday)
             {
                 MessageBox.Show("Happy birthday!");
             }
-            Age = userAge;
-            WesternZodiacSign = await DetermineWesternZodiacSign(_user.Birthday);
-            EasternZodiacSign = await DetermineEasternZodiacSign(_user.Birthday);
+            
+            await _user.DetermineWesternZodiacSign();
+            await _user.DetermineEasternZodiacSign();
+
+            Age = _user.Age;
+            WesternZodiacSign = _user.SunSign;
+            EasternZodiacSign = _user.ChineseSign;
             NameToDisplay = _user.Name;
             SurnameToDisplay = _user.Surname;
             EmailToDisplay = _user.Email;
 
-        }
-
-        private Task <string> DetermineWesternZodiacSign(DateTime birthday)
-        {
-            int month = birthday.Month;
-            int day = birthday.Day;
-
-            if (month == 12)
-            {
-
-                if (day < 22)
-                    return Task.FromResult("Sagittarius");
-                else
-                    return Task.FromResult("Capricorn");
-            }
-
-            else if (month == 1)
-            {
-                if (day < 20)
-                    return Task.FromResult("Capricorn");
-                else
-                    return Task.FromResult("Aquarius");
-            }
-
-            else if (month == 2)
-            {
-                if (day < 19)
-                    return Task.FromResult("Aquarius");
-                else
-                    return Task.FromResult("Pisces");
-            }
-
-            else if (month == 3)
-            {
-                if (day < 21)
-                    return Task.FromResult("Pisces");
-                else
-                    return Task.FromResult("Aries");
-            }
-            else if (month == 4)
-            {
-                if (day < 20)
-                    return Task.FromResult("Aries");
-                else
-                    return Task.FromResult("Taurus");
-            }
-
-            else if (month == 5)
-            {
-                if (day < 21)
-                    return Task.FromResult("Taurus");
-                else
-                    return Task.FromResult("Gemini");
-            }
-
-            else if (month == 6)
-            {
-                if (day < 21)
-                    return Task.FromResult("Gemini");
-                else
-                    return Task.FromResult("Cancer");
-            }
-
-            else if (month == 7)
-            {
-                if (day < 23)
-                    return Task.FromResult("Cancer");
-                else
-                    return Task.FromResult("Leo");
-            }
-
-            else if (month == 8)
-            {
-                if (day < 23)
-                    return Task.FromResult("Leo");
-                else
-                    return Task.FromResult("Virgo");
-            }
-
-            else if (month == 9)
-            {
-                if (day < 23)
-                    return Task.FromResult("Virgo");
-                else
-                    return Task.FromResult("Libra");
-            }
-
-            else if (month == 10)
-            {
-                if (day < 23)
-                    return Task.FromResult("Libra");
-                else
-                    return Task.FromResult("Scorpio");
-            }
-
-            else if (month == 11)
-            {
-                if (day < 22)
-                    return Task.FromResult("Scorpio");
-                else
-                    return Task.FromResult("Sagittarius");
-            }
-
-            return Task.FromResult("");
-        }
-
-        private Task <string> DetermineEasternZodiacSign(DateTime birthday)
-        {
-            int year = birthday.Year;
-             string[] animals = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };
-             string[] elements = { "Wood", "Fire", "Earth", "Metal", "Water" };
-             string[] animalChars = { "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥" };
-             string[,] elementChars = { { "甲", "丙", "戊", "庚", "壬" }, { "乙", "丁", "己", "辛", "癸" } };
-             int ei = (int)Math.Floor((year - 4.0) % 10 / 2);
-             int ai = (year - 4) % 12;
-             return
-                 Task.FromResult($"{elements[ei]} {animals[ai]}. " +
-                 $"{elementChars[year % 2, ei]}" +
-                 $"{animalChars[(year - 4) % 12]}");
         }
         #endregion
 
